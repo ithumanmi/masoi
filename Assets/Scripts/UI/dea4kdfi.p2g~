@@ -1,0 +1,85 @@
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections.Generic;
+using System.Collections;
+
+public class VotePanel : MonoBehaviour
+{
+    public Transform content; // Kéo thả Content của ScrollView/List vào đây
+    public VoteItemUI voteItemPrefab; // Prefab cho từng dòng vote
+    public Button skipVoteButton; // Nút bỏ qua vote (nếu có)
+    public float timeoutSeconds = 10f; // Thời gian chờ vote
+
+    private List<PlayerController> currentPlayers = new List<PlayerController>();
+    private RoleAction voteActionType = RoleAction.VoteKick;
+    private Coroutine timeoutCoroutine;
+
+    public void Show(List<PlayerController> players, RoleAction voteType = RoleAction.VoteKick)
+    {
+        Debug.Log("Show vote panel");
+        gameObject.SetActive(true);
+        currentPlayers = players;
+        voteActionType = voteType;
+        foreach (Transform child in content)
+            Destroy(child.gameObject);
+        foreach (var player in players)
+        {
+            if (!player.isAlive) continue;
+            var item = Instantiate(voteItemPrefab, content);
+            item.SetInfo(player.playerName, () => OnVote(player));
+        }
+        if (skipVoteButton != null)
+        {
+            skipVoteButton.onClick.RemoveAllListeners();
+            skipVoteButton.onClick.AddListener(OnSkipVote);
+            skipVoteButton.gameObject.SetActive(true);
+        }
+        //if (timeoutCoroutine != null) StopCoroutine(timeoutCoroutine);
+        //timeoutCoroutine = StartCoroutine(TimeoutVote());
+    }
+
+    public void Hide()
+    {
+        gameObject.SetActive(false);
+        if (skipVoteButton != null)
+            skipVoteButton.gameObject.SetActive(false);
+        if (timeoutCoroutine != null) StopCoroutine(timeoutCoroutine);
+    }
+
+    private void OnVote(PlayerController target)
+    {
+        var actionData = new RoleActionData(voteActionType, null, target);
+        ActionResolver.Instance.CollectAction(actionData);
+        Hide();
+    }
+
+    private void OnSkipVote()
+    {
+        var actionData = new RoleActionData(RoleAction.VoteSkip, null, null);
+        ActionResolver.Instance.CollectAction(actionData);
+        Hide();
+    }
+
+    private IEnumerator TimeoutVote()
+    {
+        float t = 0;
+        while (t < timeoutSeconds)
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
+        if (gameObject.activeSelf && currentPlayers.Count > 0)
+        {
+            var possibleTargets = currentPlayers.FindAll(p => p.isAlive);
+            if (possibleTargets.Count > 0)
+            {
+                var target = possibleTargets[Random.Range(0, possibleTargets.Count)];
+                OnVote(target);
+            }
+            else
+            {
+                OnSkipVote();
+            }
+        }
+    }
+} 

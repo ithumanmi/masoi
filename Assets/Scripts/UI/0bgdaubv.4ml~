@@ -1,0 +1,17 @@
+using UnityEngine;
+using UnityEngine.UI;
+using System;
+
+public class PlayerItemUI : MonoBehaviour
+{
+    public Text nameText;
+    //public Text roleText;
+    public Image statusIcon; // Xanh: sống, Đỏ: chết
+
+    public void SetInfo(string name, bool isAlive, string role = null)
+    {
+        nameText.text = name;
+        //roleText.text = role ?? "";
+        statusIcon.color = isAlive ? Color.green : Color.red;
+    }
+} 

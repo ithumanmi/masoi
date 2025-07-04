@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60d85b3f94637fe4dba0276225630b97, type: 3}
+  m_Name: Witch
+  m_EditorClassIdentifier: 
+  roleName: "Ph\xF9 Th\u1EE7y"
+  description: "C\xF3 1 b\xECnh c\u1EE9u v\xE0 1 b\xECnh gi\u1EBFt, ban \u0111\xEAm
+    bi\u1EBFt ai b\u1ECB s\xF3i c\u1EAFn v\xE0 ch\u1ECDn c\u1EE9u/gi\u1EBFt."

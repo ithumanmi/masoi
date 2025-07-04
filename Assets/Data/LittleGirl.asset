@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe7d823299e8fdf4ba5635b8232a4714, type: 3}
+  m_Name: LittleGirl
+  m_EditorClassIdentifier: 
+  roleName: "C\xF4 B\xE9"
+  description: "Ban \u0111\xEAm c\xF3 th\u1EC3 l\xE9n xem s\xF3i ch\u1ECDn ai (t\xF9y
+    lu\u1EADt ch\u01A1i, n\u1EBFu b\u1ECB ph\xE1t hi\u1EC7n s\u1EBD b\u1ECB s\xF3i
+    gi\u1EBFt ngay)"

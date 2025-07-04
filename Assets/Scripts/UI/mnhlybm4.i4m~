@@ -1,0 +1,28 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class PlayerItemUIWIthButton : MonoBehaviour
+{
+
+    public Text nameText;
+    //public Text roleText;
+    public Image statusIcon; // Xanh: s?ng, ??: ch?t
+    public Button selectButton;
+    private Action onClickCallback;
+
+    public void SetInfo(string name, bool isAlive, string role, Action onClick)
+    {
+        nameText.text = name;
+        //roleText.text = role ?? "";
+        statusIcon.color = isAlive ? Color.green : Color.red;
+        onClickCallback = onClick;
+        if (selectButton != null)
+        {
+            selectButton.onClick.RemoveAllListeners();
+            selectButton.onClick.AddListener(() => onClickCallback?.Invoke());
+        }
+    }
+}

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e93510f54e375364d876294c0cc1c566, type: 3}
+  m_Name: Werewolf
+  m_EditorClassIdentifier: 
+  roleName: "Ma S\xF3i"
+  description: "Th\u1EAFng khi s\u1ED1 s\xF3i >= s\u1ED1 d\xE2n l\xE0Ban \u0111\xEAm
+    ch\u1ECDn n\u1EA1n nh\xE2n, c\xF3 th\u1EC3 chat ri\xEAng v\u1EDBi s\xF3i ng\u01B0\u1EDDi
+    kh\xE1c"

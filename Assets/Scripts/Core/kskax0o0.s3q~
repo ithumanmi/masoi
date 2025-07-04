@@ -1,0 +1,21 @@
+using UnityEngine;
+
+public class PlayerController
+{
+    public string playerName;
+    public Role role;
+    public bool isAlive = true;
+    public int CurrentHP = 10;
+    public int CurrentMP = 10;
+    public int Damage = 100;
+
+    public void Vote(PlayerController target)
+    {
+        // TODO: Xử lý vote local (nếu cần)
+    }
+
+    public void PerformNightAction(PlayerController target)
+    {
+        // TODO: Xử lý hành động đêm local (nếu cần)
+    }
+} 

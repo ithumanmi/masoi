@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cff26e08de4d9e048b7c6812dd8b17c6, type: 3}
+  m_Name: OldMan
+  m_EditorClassIdentifier: 
+  roleName: "Gi\xE0 L\xE0ng"
+  description: "C\xF3 nhi\u1EC1u m\u1EA1ng s\u1ED1ng (th\u01B0\u1EDDng l\xE0 2).
+    M\u1ED7i l\u1EA7n b\u1ECB s\xF3i c\u1EAFn ch\u1EC9 m\u1EA5t 1 m\u1EA1ng, khi
+    h\u1EBFt m\u1EA1ng m\u1EDBi ch\u1EBFt."
+  lives: 2

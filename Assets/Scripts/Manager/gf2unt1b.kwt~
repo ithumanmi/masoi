@@ -1,0 +1,201 @@
+using System.Collections.Generic;
+using UnityEngine;
+using System.Linq;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance { get; private set; }
+    public List<PlayerController> players = new List<PlayerController>();
+    public GamePhase currentPhase = GamePhase.Lobby;
+
+    // Thêm các trường để gán trong Inspector
+    public List<Role> availableRoles; // Gán đủ số ScriptableObject role trong Inspector
+    public GameObject playerPrefab;   // Gán prefab PlayerController trong Inspector
+    public int playerCount = 10;      // Số người chơi (tùy ý)
+    public Transform containerPlayer;
+    //// Lưu kết quả soi và lén xem cho từng đêm
+    //public Dictionary<PlayerController, string> seerResults = new Dictionary<PlayerController, string>();
+    //public Dictionary<PlayerController, string> spyResults = new Dictionary<PlayerController, string>();
+
+    public int aliveCount = 0;
+
+    public int werewolfCount = 0;
+    public int villagerCount = 0;
+
+    public Dictionary<PlayerController, int> voteCounts = new Dictionary<PlayerController, int>();
+
+    public int werewolfCountConfig = 2; // Số sói muốn có
+    public int villagerCountConfig = 8; // Số dân làng muốn có
+
+    public int dayCount = 1;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        StartGame();
+    }
+
+    public void StartGame()
+    {
+        players.Clear();
+        voteCounts.Clear();
+        //var rolesToAssign = new List<Role>(availableRoles);
+
+
+        var rolesToAssign = new List<Role>();
+        // Thêm sói
+        for (int i = 0; i < werewolfCountConfig; i++)
+            rolesToAssign.Add(availableRoles.First(r => r is Werewolf));
+        // Thêm dân làng
+        for (int i = 0; i < villagerCountConfig; i++)
+            rolesToAssign.Add(availableRoles.First(r => r is Villager));
+        // Có thể thêm các role đặc biệt khác ở đây nếu muốn
+
+        ShuffleList(rolesToAssign);
+       // for (int i = 0; i < playerCount; i++)
+
+        for (int i = 0; i < rolesToAssign.Count; i++)
+        {
+            var playerData = new PlayerController();
+            playerData.playerName = $"Player {i + 1}";
+            playerData.isAlive = true;
+            playerData.role = rolesToAssign[i];
+
+            //if (i < rolesToAssign.Count)
+            //    playerData.role = rolesToAssign[i];
+            //else
+            //    playerData.role = rolesToAssign[rolesToAssign.Count - 1];
+
+            players.Add(playerData);
+        }
+
+        UIManager.Instance.UpdatePlayerList(players);
+       
+        currentPhase = GamePhase.Night;
+        NextPhase();
+    }
+
+
+    // Hàm random hoán vị danh sách
+    private void ShuffleList<T>(List<T> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            int rnd = Random.Range(i, list.Count);
+            T temp = list[i];
+            list[i] = list[rnd];
+            list[rnd] = temp;
+        }
+    }
+    
+    public void NightPhase()
+    {
+        // 1. Mỗi người chơi thực hiện NightAction
+        foreach (var player in players)
+        {
+            if (player.isAlive && player.role != null)
+            {
+                player.role.NightAction(player, players);
+            }
+        }
+        // 2. Tổng hợp và xử lý action
+        ActionResolver.Instance.ResolveNightActions(players);
+        // 3. Xử lý kết quả đặc biệt (Inspect, Spy)
+        //HandleSpecialResults();
+        // 4. Chuyển sang pha ngày sau khi xử lý xong (test tự động)
+      
+    }
+
+    public void DayPhase()
+    {
+        // Cho phép vote loại
+     //   UIManager.Instance.ShowVotePanel(players);
+
+        // Sau khi vote xong, gọi NextPhase() để chuyển lại Night
+     
+    }
+    public void NextPhase()
+    {
+        Debug.Log("NextPhase");
+        voteCounts.Clear(); // Reset số vote khi chuyển phase
+        if (currentPhase == GamePhase.Night)
+        {
+            currentPhase = GamePhase.Day;
+            dayCount++;
+            UIManager.Instance.UpdateUI();
+            UIManager.Instance.UpdatePlayerListWithPhase(players, RoleActivity.Day);
+            UIManager.Instance.StartVoteTimer();
+        }
+        else if (currentPhase == GamePhase.Day)
+        {
+            CheckWinCondition();
+            if (currentPhase != GamePhase.End)
+            {
+                currentPhase = GamePhase.Night;
+                UIManager.Instance.UpdateUI();
+                UIManager.Instance.UpdatePlayerListWithPhase(players, RoleActivity.Night);
+                UIManager.Instance.StartVoteTimer();
+            }
+        }
+        else if (currentPhase == GamePhase.End)
+        {
+            UIManager.Instance.UpdateUI();
+        }
+    }
+
+    public void CheckWinCondition()
+    {
+        
+        foreach (var player in players)
+        {
+            if (!player.isAlive) continue;
+            aliveCount++;
+            if (player.role is Werewolf)
+                werewolfCount++;
+            else
+                villagerCount++;
+        }
+
+        // Ma sói thắng nếu số sói >= số người còn lại (không phải sói)
+        if (werewolfCount > 0 && werewolfCount >= villagerCount)
+        {
+            currentPhase = GamePhase.End;
+            UIManager.Instance.ShowPopupForPlayer( "Ma sói chiến thắng!");
+            UIManager.Instance.UpdateUI();
+            return;
+        }
+
+        // Dân làng thắng nếu không còn sói nào
+        if (werewolfCount == 0)
+        {
+            currentPhase = GamePhase.End;
+            UIManager.Instance.ShowPopupForPlayer("Dân làng chiến thắng!");
+            UIManager.Instance.UpdateUI();
+            return;
+        }
+
+        // Nếu còn nhiều hơn 1 phe, game tiếp tục
+    }
+
+}
+
+public enum GamePhase
+{
+    Lobby,
+    Night,
+    Day,
+    End
+}
+

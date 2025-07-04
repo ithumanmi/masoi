@@ -1,0 +1,140 @@
+using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine.UI;
+
+public class UIManager : MonoBehaviour
+{
+    public static UIManager Instance { get; private set; }
+
+    // Lưu popup message cho từng người chơi
+    private Dictionary<PlayerController, string> playerPopups = new Dictionary<PlayerController, string>();
+
+    // Gán các popup panel cho từng player (có thể gán qua Inspector hoặc code)
+    public Dictionary<PlayerController, PopupPanel> playerPopupPanels = new Dictionary<PlayerController, PopupPanel>();
+
+    // Các panel UI, gán từ Hierarchy
+    public GameObject nightPanel;
+    public GameObject dayPanel;
+    public GameObject endPanel;
+    public PlayerListPanel playerListPanel;
+    public VotePanel votePanel;
+    public ActionPanel actionPanel;
+    public Text textPharse;
+
+    public GamePhase currentPhase = GamePhase.Lobby;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    // Hiển thị popup cho toàn bộ client (cũ)
+    public void ShowPopup(string message)
+    {
+        Debug.Log($"Popup chung: {message}");
+        // TODO: Hiển thị popup chung trên UI
+    }
+
+    // Hiển thị popup riêng cho từng người chơi
+    public void ShowPopupForPlayer(PlayerController player, string message)
+    {
+        if (playerPopupPanels.TryGetValue(player, out var panel))
+        {
+            panel.Show(message);
+        }
+    }
+
+    // Lấy popup message cho player (dùng cho UI hiển thị)
+    public string GetPopupForPlayer(PlayerController player)
+    {
+        if (playerPopups.TryGetValue(player, out var msg))
+            return msg;
+        return null;
+    }
+
+    public void ClearPopups()
+    {
+        foreach (var panel in playerPopupPanels.Values)
+            panel.Hide();
+    }
+
+    // Cập nhật UI theo phase và danh sách player
+    public void UpdateUI()
+    {
+        currentPhase = GameManager.Instance.currentPhase;
+        if (nightPanel != null) nightPanel.SetActive(currentPhase == GamePhase.Night);
+        if (dayPanel != null) dayPanel.SetActive(currentPhase == GamePhase.Day);
+        if (endPanel != null) endPanel.SetActive(currentPhase == GamePhase.End);
+        UpdatePlayerList(GameManager.Instance.players);
+    }
+
+    // Cập nhật danh sách player lên UI
+    public void UpdatePlayerList(List<PlayerController> players)
+    {
+        if (playerListPanel != null)
+            playerListPanel.UpdateList(players);
+    }
+
+    // Hiển thị VotePanel
+    public void ShowVotePanel(List<PlayerController> players)
+    {
+        if (votePanel != null)
+            votePanel.Show(players);
+    }
+
+    // Hiển thị ActionPanel
+    public void ShowActionPanel(PlayerController player, List<PlayerController> targets, string actionName)
+    {
+        if (actionPanel != null)
+            actionPanel.ShowActions(player, targets, actionName);
+    }
+
+    // Ẩn tất cả panel động
+    public void HideAllPanels()
+    {
+        if (votePanel != null) votePanel.Hide();
+        if (actionPanel != null) actionPanel.Hide();
+        // Có thể ẩn thêm các panel khác nếu cần
+    }
+
+    public void NextPhase()
+    {
+        UIManager.Instance.ClearPopups();
+        currentPhase = GameManager.Instance.currentPhase;
+        if (currentPhase == GamePhase.Night)
+        {
+            // Kết thúc đêm, sang ngày
+            currentPhase = GamePhase.Day;
+            GameManager.Instance.currentPhase = currentPhase;
+            UpdateUI();
+            textPharse.text = "Buổi tối";
+        }
+        else if (currentPhase == GamePhase.Day)
+        {
+            // Kết thúc ngày, kiểm tra thắng/thua
+            GameManager.Instance.CheckWinCondition();
+            if (currentPhase != GamePhase.End)
+            {
+                currentPhase = GamePhase.Night;
+                GameManager.Instance.currentPhase = currentPhase;
+                UIManager.Instance.UpdateUI();
+                textPharse.text = "Buổi sáng";  
+            }
+        }
+        else if (currentPhase == GamePhase.End)
+        {
+            // Hiển thị kết quả cuối cùng, cho phép chơi lại
+            UpdateUI();
+
+            textPharse.text = "End game";
+        }
+    }
+} 

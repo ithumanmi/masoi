@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f5021006ac1acc4d80499c866f7dcfc, type: 3}
+  m_Name: Villager
+  m_EditorClassIdentifier: 
+  roleName: "D\xE2n L\xE0ng"
+  description: "Kh\xF4ng c\xF3 k\u1EF9 n\u0103ng \u0111\u1EB7c bi\u1EC7t, ch\u1EC9
+    tham gia th\u1EA3o lu\u1EADn v\xE0 b\u1ECF phi\u1EBFu ban ng\xE0y."

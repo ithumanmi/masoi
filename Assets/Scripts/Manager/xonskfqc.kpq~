@@ -1,0 +1,206 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance { get; private set; }
+    public List<PlayerController> players = new List<PlayerController>();
+    public GamePhase currentPhase = GamePhase.Lobby;
+
+    // Thêm các trường để gán trong Inspector
+    public List<Role> availableRoles; // Gán đủ số ScriptableObject role trong Inspector
+    public GameObject playerPrefab;   // Gán prefab PlayerController trong Inspector
+    public int playerCount = 10;      // Số người chơi (tùy ý)
+    public Transform containerPlayer;
+    // Lưu kết quả soi và lén xem cho từng đêm
+    public Dictionary<PlayerController, string> seerResults = new Dictionary<PlayerController, string>();
+    public Dictionary<PlayerController, string> spyResults = new Dictionary<PlayerController, string>();
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        StartGame();
+    }
+
+    public void StartGame()
+    {
+        players.Clear();
+        var rolesToAssign = new List<Role>(availableRoles);
+        ShuffleList(rolesToAssign);
+        for (int i = 0; i < playerCount; i++)
+        {
+            var playerData = new PlayerController();
+            playerData.playerName = $"Player {i + 1}";
+            playerData.isAlive = true;
+            if (i < rolesToAssign.Count)
+                playerData.role = rolesToAssign[i];
+            else
+                playerData.role = rolesToAssign[rolesToAssign.Count - 1];
+            players.Add(playerData);
+        }
+        // Gọi UI cập nhật danh sách player
+        UIManager.Instance.UpdatePlayerList(players);
+        currentPhase = GamePhase.Night;
+        NightPhase();
+    }
+
+    // Hàm random hoán vị danh sách
+    private void ShuffleList<T>(List<T> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            int rnd = Random.Range(i, list.Count);
+            T temp = list[i];
+            list[i] = list[rnd];
+            list[rnd] = temp;
+        }
+    }
+    
+    public void NightPhase()
+    {
+        // 1. Mỗi người chơi thực hiện NightAction
+        foreach (var player in players)
+        {
+            if (player.isAlive && player.role != null)
+            {
+                player.role.NightAction(player, players);
+            }
+        }
+        // 2. Tổng hợp và xử lý action
+        ActionResolver.Instance.ResolveNightActions(players);
+        // 3. Xử lý kết quả đặc biệt (Inspect, Spy)
+        HandleSpecialResults();
+        // 4. Chuyển sang pha ngày sau khi xử lý xong (test tự động)
+        NextPhase();
+    }
+
+    public void DayPhase()
+    {
+        // Cho phép vote loại
+        UIManager.Instance.ShowVotePanel(players);
+        // Sau khi vote xong, gọi NextPhase() để chuyển lại Night
+    }
+
+    private void HandleSpecialResults()
+    {
+        seerResults.Clear();
+        spyResults.Clear();
+        var actions = ActionResolver.Instance.LastNightActions;
+        foreach (var action in actions)
+        {
+            if (action.action == RoleAction.Inspect && action.source != null && action.target != null)
+            {
+                // Seer biết vai trò thật của người bị soi
+                string msg = $"{action.target.playerName} là {action.target.role.roleName}";
+                seerResults[action.source] = msg;
+                // Hiển thị popup riêng cho Seer
+                UIManager.Instance.ShowPopupForPlayer(action.source, $"Bạn soi: {msg}");
+            }
+            if (action.action == RoleAction.Spy && action.source != null)
+            {
+                // LittleGirl biết sói chọn ai (giả lập: lấy nạn nhân đầu tiên bị sói cắn)
+                string info = "Không phát hiện sói chọn ai";
+                foreach (var a in actions)
+                {
+                    if (a.action == RoleAction.Kill && a.source.role is Werewolf && a.target != null)
+                    {
+                        info = $"Sói chọn: {a.target.playerName}";
+                        break;
+                    }
+                }
+                spyResults[action.source] = info;
+                // Hiển thị popup riêng cho LittleGirl
+                UIManager.Instance.ShowPopupForPlayer(action.source, $"Bạn lén xem: {info}");
+            }
+        }
+    }
+
+    public void NextPhase()
+    {
+        UIManager.Instance.ClearPopups();
+        if (currentPhase == GamePhase.Night)
+        {
+            currentPhase = GamePhase.Day;
+            UIManager.Instance.UpdateUI();
+            DayPhase();
+        }
+        else if (currentPhase == GamePhase.Day)
+        {
+            CheckWinCondition();
+            if (currentPhase != GamePhase.End)
+            {
+                currentPhase = GamePhase.Night;
+                UIManager.Instance.UpdateUI();
+                NightPhase();
+            }
+        }
+        else if (currentPhase == GamePhase.End)
+        {
+            UIManager.Instance.UpdateUI();
+        }
+    }
+
+    public void CheckWinCondition()
+    {
+        int werewolfCount = 0;
+        int villagerCount = 0;
+        int aliveCount = 0;
+
+        foreach (var player in players)
+        {
+            if (!player.isAlive) continue;
+            aliveCount++;
+            if (player.role is Werewolf)
+                werewolfCount++;
+            else
+                villagerCount++;
+        }
+
+        // Ma sói thắng nếu số sói >= số người còn lại (không phải sói)
+        if (werewolfCount > 0 && werewolfCount >= villagerCount)
+        {
+            currentPhase = GamePhase.End;
+            UIManager.Instance.ShowPopupForPlayer(null, "Ma sói chiến thắng!");
+            UIManager.Instance.UpdateUI();
+            return;
+        }
+
+        // Dân làng thắng nếu không còn sói nào
+        if (werewolfCount == 0)
+        {
+            currentPhase = GamePhase.End;
+            UIManager.Instance.ShowPopupForPlayer(null, "Dân làng chiến thắng!");
+            UIManager.Instance.UpdateUI();
+            return;
+        }
+
+        // Nếu còn nhiều hơn 1 phe, game tiếp tục
+    }
+
+    // Có thể gọi các hàm này từ UI Button:
+    // public void OnStartGameButton() => StartGame();
+    // public void OnNextPhaseButton() => NextPhase();
+    // public void OnNightPhaseButton() => NightPhase();
+    // public void OnDayPhaseButton() => DayPhase();
+}
+
+public enum GamePhase
+{
+    Lobby,
+    Night,
+    Day,
+    End
+}
+

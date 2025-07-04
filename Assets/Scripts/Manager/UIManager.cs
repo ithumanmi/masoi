@@ -1,0 +1,281 @@
+using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine.UI;
+using System;
+
+public class UIManager : MonoBehaviour
+{
+    public static UIManager Instance { get; private set; }
+
+    // Lưu popup message cho từng người chơi
+    private Dictionary<PlayerController, string> playerPopups = new Dictionary<PlayerController, string>();
+
+    // Gán các popup panel cho từng player (có thể gán qua Inspector hoặc code)
+
+    // Các panel UI, gán từ Hierarchy
+    public GameObject nightPanel;
+    public GameObject dayPanel;
+    public GameObject endPanel;
+    public PlayerListPanel playerListPanel;
+    public PlayerListPanelWithPhase playerListPanelWithPhase;
+    public VotePanel votePanel;
+    public ActionPanel actionPanel;
+    public Text textPharse;
+    public Text textResult; 
+    public Action actionOpenPanelVoce;
+    public Text dayCountText;
+    public Slider voteTimerBar;
+    public float voteDuration = 10f;
+    public float checkDuration = 5f;
+    private float timer;
+    private bool votingActive = false;
+    private bool checkingActive = false;
+
+    public GamePhase currentPhase = GamePhase.Lobby;
+    public Text phaseStatusText;
+    public Text timerCountText;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        HideAllPanels();
+        ClearPopups();
+    }
+
+    // Hiển thị popup cho toàn bộ client (cũ)
+    public void ShowPopup(string message)
+    {
+        Debug.Log($"Popup chung: {message}");
+        // TODO: Hiển thị popup chung trên UI
+    }
+
+    // Hiển thị popup riêng cho từng người chơi
+    public void ShowPopupForPlayer(string message)
+    {
+
+        textResult.text = message;  
+
+
+    }
+
+    // Lấy popup message cho player (dùng cho UI hiển thị)
+    public string GetPopupForPlayer(PlayerController player)
+    {
+        if (playerPopups.TryGetValue(player, out var msg))
+            return msg;
+        return null;
+    }
+
+    public void ClearPopups()
+    {
+        textResult.text = string.Empty;
+    }
+
+    // Cập nhật UI theo phase và danh sách player
+    public void UpdateUI()
+    {
+        currentPhase = GameManager.Instance.currentPhase;
+        if (nightPanel != null) nightPanel.SetActive(currentPhase == GamePhase.Night);
+        if (dayPanel != null) dayPanel.SetActive(currentPhase == GamePhase.Day);
+        if (endPanel != null) endPanel.SetActive(currentPhase == GamePhase.End);
+        UpdatePlayerList(GameManager.Instance.players);
+        // Cập nhật số ngày
+        if (dayCountText != null)
+            dayCountText.text = $"Ngày {GameManager.Instance.dayCount}";
+    }
+
+    // Cập nhật danh sách player lên UI
+    public void UpdatePlayerList(List<PlayerController> players)
+    {
+        if (playerListPanel != null)
+            playerListPanel.UpdateList(players);
+    }
+
+    public void UpdatePlayerListWithPhase(List<PlayerController> players, RoleActivity phase)
+    {
+        Debug.Log("UpdatePlayerListWithPhase");
+        if (playerListPanelWithPhase != null)
+            playerListPanelWithPhase.UpdateList(players, phase, null);
+    }
+
+    // Hàm này sẽ được truyền vào từng item, để mở VotePanel cho player được chọn
+    public void ShowVotePanelForPlayer(PlayerController player)
+    {
+        if (votePanel != null)
+            votePanel.Show(new List<PlayerController> { player });
+    }
+
+    // Hiển thị VotePanel
+    public void ShowVotePanel()
+    {
+        Debug.Log("ShowVotePanel");
+        ShowVotePanel();
+    }
+    public void ShowVotePanel(List<PlayerController> players)
+    {
+        if (votePanel != null)
+            votePanel.Show(players);
+    }
+
+    // Hiển thị ActionPanel
+    public void ShowActionPanel(PlayerController player, List<PlayerController> targets, string actionName)
+    {
+        if (actionPanel != null)
+            actionPanel.ShowActions(player, targets, actionName);
+    }
+
+    // Ẩn tất cả panel động
+    public void HideAllPanels()
+    {
+        if (votePanel != null) votePanel.Hide();
+        if (actionPanel != null) actionPanel.Hide();
+        // Có thể ẩn thêm các panel khác nếu cần
+    }
+
+    public void NextPhase()
+    {
+        UIManager.Instance.ClearPopups();
+        currentPhase = GameManager.Instance.currentPhase;
+        if (currentPhase == GamePhase.Night)
+        {
+            // Kết thúc đêm, sang ngày
+            currentPhase = GamePhase.Day;
+            GameManager.Instance.currentPhase = currentPhase;
+            UpdateUI();
+            textPharse.text = "Buổi tối";
+        }
+        else if (currentPhase == GamePhase.Day)
+        {
+            // Kết thúc ngày, kiểm tra thắng/thua
+            GameManager.Instance.CheckWinCondition();
+            if (currentPhase != GamePhase.End)
+            {
+                currentPhase = GamePhase.Night;
+                GameManager.Instance.currentPhase = currentPhase;
+                UIManager.Instance.UpdateUI();
+                textPharse.text = "Buổi sáng";  
+            }
+        }
+        else if (currentPhase == GamePhase.End)
+        {
+            // Hiển thị kết quả cuối cùng, cho phép chơi lại
+            UpdateUI();
+
+            textPharse.text = "End game";
+        }
+    }
+
+    public void ShowVotePanelExcludePlayer(PlayerController excludePlayer)
+    {
+        var allPlayers = GameManager.Instance.players;
+        var filtered = allPlayers.FindAll(p => p != excludePlayer && p.isAlive);
+        if (votePanel != null)
+            votePanel.Show(filtered);
+    }
+
+    public void StartVoteTimer()
+    {
+        timer = voteDuration;
+        votingActive = true;
+        checkingActive = false;
+        if (voteTimerBar != null)
+        {
+            voteTimerBar.maxValue = voteDuration;
+            voteTimerBar.value = voteDuration;
+            voteTimerBar.gameObject.SetActive(true);
+        }
+        if (phaseStatusText != null)
+            phaseStatusText.text = "Đang bỏ phiếu";
+        if (playerListPanelWithPhase != null)
+            playerListPanelWithPhase.SetInteractable(true);
+    }
+
+    public void StartCheckTimer()
+    {
+        Debug.Log("StartCheckTimer");
+        timer = checkDuration;
+        votingActive = false;
+        checkingActive = true;
+        if (voteTimerBar != null)
+        {
+            voteTimerBar.maxValue = checkDuration;
+            voteTimerBar.value = checkDuration;
+            voteTimerBar.gameObject.SetActive(true);
+        }
+        if (phaseStatusText != null)
+            phaseStatusText.text = "Đang kiểm tra";
+        // Xử lý kết quả vote và cập nhật UI
+        ActionResolver.Instance.ResolveVoteResults();
+        UpdatePlayerList(GameManager.Instance.players);
+        // Khóa UI vote nếu panel còn mở
+
+        if (playerListPanelWithPhase != null)
+            playerListPanelWithPhase.SetInteractable(false);
+    }
+
+    private void Update()
+    {
+        if (votingActive || checkingActive)
+        {
+            timer -= Time.deltaTime;
+            if (voteTimerBar != null)
+                voteTimerBar.value = timer;
+            if (timerCountText != null)
+                timerCountText.text = Mathf.CeilToInt(Mathf.Max(timer, 0)).ToString();
+            if (votingActive)
+            {
+                if (timer <= 0f)
+                {
+                    votingActive = false;
+                    if (votePanel != null)
+                        votePanel.Hide();
+                    StartCheckTimer();
+                }
+            }
+            else if (checkingActive)
+            {
+                if (timer <= 0f)
+                {
+                    checkingActive = false;
+                    if (voteTimerBar != null)
+                        voteTimerBar.gameObject.SetActive(false);
+                    if (phaseStatusText != null)
+                        phaseStatusText.text = "";
+                    if (timerCountText != null)
+                        timerCountText.text = "";
+                    GameManager.Instance.NextPhase();
+                    UpdateUI();
+                    UpdatePhaseText();
+                }
+            }
+        }
+        else
+        {
+            if (timerCountText != null)
+                timerCountText.text = "";
+        }
+    }
+
+    public void UpdatePhaseText()
+    {
+        if (textPharse == null) return;
+        if (currentPhase == GamePhase.Night)
+            textPharse.text = "Buổi tối";
+        else if (currentPhase == GamePhase.Day)
+            textPharse.text = "Buổi sáng";
+        else if (currentPhase == GamePhase.End)
+            textPharse.text = "End game";
+    }
+} 

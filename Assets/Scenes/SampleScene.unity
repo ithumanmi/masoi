@@ -157,15 +157,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ea2b6e3b57e977e438602041e888edb7, type: 2}
   - {fileID: 11400000, guid: 5c49a72133bed1140aae45c2736714b6, type: 2}
   playerPrefab: {fileID: 2742089726308369933, guid: 43e163ac7d5f38d44bdf83fe9153fea1, type: 3}
-  playerCount: 8
+  playerCount: 5
   containerPlayer: {fileID: 2044488442}
+  werewolfCountConfig: 2
+  villagerCountConfig: 3
+  dayCount: 0
   aliveCount: 0
   werewolfCount: 0
   villagerCount: 0
-  werewolfCountConfig: 2
-  villagerCountConfig: 8
-  dayCount: 0
-  isKillWithDamege: 0
 --- !u!4 &161113117
 Transform:
   m_ObjectHideFlags: 0
@@ -1809,8 +1808,8 @@ MonoBehaviour:
   textResult: {fileID: 1794047840}
   dayCountText: {fileID: 1319529299}
   voteTimerBar: {fileID: 546929583}
-  voteDuration: 10
-  checkDuration: 5
+  voteDuration: 5
+  checkDuration: 2
   currentPhase: 0
   phaseStatusText: {fileID: 661782453}
   timerCountText: {fileID: 1945081366}
@@ -2125,7 +2124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9924528, g: 0.9924528, b: 0.9924528, a: 1}
+  m_Color: {r: 0.6981132, g: 0.003951527, b: 0.003951527, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2600,7 +2599,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 202515904957763900, guid: 52536cba633ffbb40b326d7250f9c0a7, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 20
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 202515904993457840, guid: 52536cba633ffbb40b326d7250f9c0a7, type: 3}
       propertyPath: m_Pivot.x
@@ -2636,7 +2635,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 202515904993457840, guid: 52536cba633ffbb40b326d7250f9c0a7, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 400
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 202515904993457840, guid: 52536cba633ffbb40b326d7250f9c0a7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2692,7 +2691,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 202515904993457841, guid: 52536cba633ffbb40b326d7250f9c0a7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 202515904993457842, guid: 52536cba633ffbb40b326d7250f9c0a7, type: 3}
       propertyPath: m_Horizontal

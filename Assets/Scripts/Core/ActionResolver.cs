@@ -138,21 +138,52 @@ public class ActionResolver : MonoBehaviour
     public void ResolveVoteResults()
     {
         Debug.Log("ResolveVoteResults " + nightActions.Count);
+
+        // 1. Đếm số vote cho từng target và lưu danh sách voter cho mỗi target
+        var voteDict = new Dictionary<PlayerController, List<RoleActionData>>();
         foreach (var action in nightActions)
         {
-
             if (action.action == RoleAction.VoteKick && action.source != null && action.target != null)
             {
-                int damage = action.source.Damage;
-                action.target.CurrentHP -= damage;
-                Debug.Log($"Player {action.source.playerName} voted {action.target.playerName}, damage: {damage}, HP left: {action.target.CurrentHP}");
-                if (action.target.CurrentHP <= 0)
-                {
-                    action.target.isAlive = false;
-                    Debug.Log($"Player {action.target.playerName} died!");
-                }
+                if (!voteDict.ContainsKey(action.target))
+                    voteDict[action.target] = new List<RoleActionData>();
+                voteDict[action.target].Add(action);
             }
         }
+
+        // 2. Tìm player bị vote nhiều nhất
+        int maxVotes = 0;
+        PlayerController mostVoted = null;
+        foreach (var kvp in voteDict)
+        {
+            if (kvp.Value.Count > maxVotes)
+            {
+                maxVotes = kvp.Value.Count;
+                mostVoted = kvp.Key;
+            }
+        }
+
+        // 3. Chỉ trừ damage cho player bị vote nhiều nhất
+        if (mostVoted != null)
+        {
+            int totalDamage = 0;
+            foreach (var action in voteDict[mostVoted])
+            {
+                int damage = action.source.Damage;
+                mostVoted.CurrentHP -= damage;
+                totalDamage += damage;
+                Debug.Log($"Player {action.source.playerName} voted {mostVoted.playerName}, damage: {damage}, HP left: {mostVoted.CurrentHP}");
+            }
+            // Có thể gọi hiệu ứng trừ máu ở đây, ví dụ:
+            // mostVoted.ShowDamage(totalDamage);
+
+            if (mostVoted.CurrentHP <= 0)
+            {
+                mostVoted.isAlive = false;
+                Debug.Log($"Player {mostVoted.playerName} died!");
+            }
+        }
+
         nightActions.Clear();
     }
 } 

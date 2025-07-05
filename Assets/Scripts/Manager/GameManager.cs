@@ -17,10 +17,7 @@ public class GameManager : MonoBehaviour
     //public Dictionary<PlayerController, string> seerResults = new Dictionary<PlayerController, string>();
     //public Dictionary<PlayerController, string> spyResults = new Dictionary<PlayerController, string>();
 
-    public int aliveCount = 0;
-
-    public int werewolfCount = 0;
-    public int villagerCount = 0;
+  
 
     public Dictionary<PlayerController, int> voteCounts = new Dictionary<PlayerController, int>();
 
@@ -28,8 +25,9 @@ public class GameManager : MonoBehaviour
     public int villagerCountConfig = 8; // Số dân làng muốn có
 
     public int dayCount = 1;
-    public bool isKillWithDamege = false;
-
+    public int aliveCount = 0;
+    public int werewolfCount = 0;
+    public int villagerCount = 0;
     private void Awake()
     {
         if (Instance == null)
@@ -133,6 +131,7 @@ public class GameManager : MonoBehaviour
         voteCounts.Clear(); // Reset số vote khi chuyển phase
         if (currentPhase == GamePhase.Night)
         {
+            CheckWinCondition();
             currentPhase = GamePhase.Day;
             dayCount++;
             UIManager.Instance.UpdateUI();
@@ -157,8 +156,11 @@ public class GameManager : MonoBehaviour
     }
 
     public void CheckWinCondition()
-    {
-        
+    { 
+        aliveCount = 0;
+        werewolfCount = 0;
+        villagerCount = 0;
+        Debug.LogError("CheckWinCondition");
         foreach (var player in players)
         {
             if (!player.isAlive) continue;
@@ -172,18 +174,23 @@ public class GameManager : MonoBehaviour
         // Ma sói thắng nếu số sói >= số người còn lại (không phải sói)
         if (werewolfCount > 0 && werewolfCount >= villagerCount)
         {
+            Debug.LogError("Ma sói chiến thắng!");
             currentPhase = GamePhase.End;
             UIManager.Instance.ShowPopupForPlayer( "Ma sói chiến thắng!");
             UIManager.Instance.UpdateUI();
+            Time.timeScale = 0; // Dừng game khi kết thúc
             return;
         }
 
         // Dân làng thắng nếu không còn sói nào
         if (werewolfCount == 0)
         {
+            Debug.LogError("Dân làng chiến thắng!");
             currentPhase = GamePhase.End;
             UIManager.Instance.ShowPopupForPlayer("Dân làng chiến thắng!");
             UIManager.Instance.UpdateUI();
+
+            Time.timeScale = 0; // Dừng game khi kết thúc
             return;
         }
 

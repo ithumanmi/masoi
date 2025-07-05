@@ -39,7 +39,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 100}
+  m_SizeDelta: {x: 400, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7472937463310399303
 MonoBehaviour:
@@ -55,6 +55,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nameText: {fileID: 7472937464233576895}
   voteButton: {fileID: 7472937463310399304}
+  player:
+    playerName: 
+    role: {fileID: 0}
+    isAlive: 1
+    CurrentHP: 10
+    CurrentMP: 10
+    Damage: 100
 --- !u!222 &7472937463310399302
 CanvasRenderer:
   m_ObjectHideFlags: 0
